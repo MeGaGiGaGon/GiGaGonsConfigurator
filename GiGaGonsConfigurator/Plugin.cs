@@ -1,8 +1,11 @@
 ﻿using BepInEx;
+using BepInEx.Bootstrap;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using HarmonyLib.Tools;
 using MonoMod.Cil;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -18,50 +21,24 @@ namespace GiGaGonsConfigurator
         private static readonly Harmony Patcher = new(PluginInfo.PLUGIN_GUID);
         private void Awake()
         {
+            Logger.LogInfo("awake");
             Logger = base.Logger;
-            Patcher.PatchAll();
+            //Patcher.PatchAll();
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
         private void OnDestroy()
         {
-            // This is very brittle but I don't know of a better way
-            // to detect if HideManagerGameObject = true
-            // In spite of that I've tried to make it as robust as possible
-            var path = Assembly.GetExecutingAssembly().Location;
-            // Find the BepInEx folder
-            while (true)
+            Type chainloaderType = typeof(Chainloader);
+
+            FieldInfo field = chainloaderType.GetField("ConfigHideBepInExGOs", BindingFlags.NonPublic | BindingFlags.Static);
+            if (field == null)
             {
-                if (path == null) return;
-                if (Path.GetDirectoryName(path) == "BepInEx")
-                {
-                    break;
-                }
-                path = Directory.GetParent(path).FullName;
+                Logger.LogInfo("Failed to get ConfigHideBepInExGOs field.");
+                return;
             }
-            // Get the path to the config folder
-            path = Path.Combine(path, "config", "BepInEx.cfg");
-            // If something goes wrong while trying to read the config,
-            // it's fine to just give up and not unload everything
-            string configContents;
-            try
-            {
-                configContents = File.ReadAllText(path);
-            }
-            catch (System.Exception ex) when (
-                ex is System.ArgumentException
-                || ex is System.ArgumentNullException
-                || ex is PathTooLongException
-                || ex is DirectoryNotFoundException
-                || ex is IOException
-                || ex is System.UnauthorizedAccessException
-                || ex is FileNotFoundException
-                || ex is System.NotSupportedException
-                || ex is System.Security.SecurityException
-            )
-            { return; }
-            // This should be consistent since BepInEx normalizes config content on load
-            if (configContents != null && configContents.Contains("HideManagerGameObject = false")) { return; }
-            // The actual OnDestroy action
+
+            ConfigEntry<bool> configEntry = (ConfigEntry<bool>)field.GetValue(null);
+            if (configEntry == null || !configEntry.Value) return;
             Patcher.UnpatchSelf();
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is unloaded!");
         }
