@@ -21,28 +21,16 @@ namespace GiGaGonsConfigurator
         private static readonly Harmony Patcher = new(PluginInfo.PLUGIN_GUID);
         private void Awake()
         {
-            Logger.LogInfo("awake");
             Logger = base.Logger;
-            //Patcher.PatchAll();
+            Patcher.PatchAll();
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
         private void OnDestroy()
         {
-            Type chainloaderType = typeof(Chainloader);
-
-            FieldInfo field = chainloaderType.GetField("ConfigHideBepInExGOs", BindingFlags.NonPublic | BindingFlags.Static);
-            if (field == null)
-            {
-                Logger.LogInfo("Failed to get ConfigHideBepInExGOs field.");
-                return;
-            }
-
-            ConfigEntry<bool> configEntry = (ConfigEntry<bool>)field.GetValue(null);
-            if (configEntry == null || !configEntry.Value) return;
+            if (Chainloader.ManagerObject.hideFlags != HideFlags.HideAndDontSave) return;
             Patcher.UnpatchSelf();
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is unloaded!");
+            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} was unloaded!");
         }
-
     }
 
     //[HarmonyPatch(typeof(LevelMapGenerator), "ConfigSpecialNodes")]

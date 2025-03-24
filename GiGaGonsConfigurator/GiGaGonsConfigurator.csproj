@@ -40,6 +40,6 @@
 	</ItemGroup>
 
 	<Target Name="CopyOutputFileToGame" AfterTargets="Build">
-		<Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="D:\SteamLibrary\steamapps\common\Haste Broken Worlds Demo\BepInEx\plugins\GiGaGonsConfigurator"/>
+		<Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="D:\SteamLibrary\steamapps\common\Haste Broken Worlds Demo\BepInEx\scripts"/>
 	</Target>
 </Project>
