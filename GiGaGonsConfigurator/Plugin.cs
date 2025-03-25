@@ -43,6 +43,41 @@ namespace GiGaGonsConfigurator
     }
 }
 
+namespace ExtenionMethods
+{
+    public static class Extensions
+    {
+        public static CodeMatcher MatchAfter(this CodeMatcher matcher, params CodeMatch[] matches)
+        {
+            matcher.MatchForward(true, matches);
+            matcher.Advance(1);
+            return matcher;
+        }
+    }
+}
+
+//[HarmonyPatch(typeof(LevelAssembler), "GetLevel")]
+//public static class Patch_LevelAssembler_GetLevel
+//{
+//    public static void ILManipulator(ILContext il, MethodBase original, ILLabel retLabel)
+//    {
+//        ILCursor c = new ILCursor(il);
+//        c.GotoNext(MoveType.After,
+//            x => x.MatchLdloc(1),
+//            x => x.MatchLdarg(3)
+//        );
+//        c.Emit(Mono.Cecil.Cil.OpCodes.Ldc_I4, 5);
+//        c.Emit(Mono.Cecil.Cil.OpCodes.Mul);
+
+//        c.GotoNext(MoveType.After,
+//            x => x.MatchLdloc(1),
+//            x => x.MatchLdarg(3)
+//        );
+//        c.Emit(Mono.Cecil.Cil.OpCodes.Ldc_I4, 5);
+//        c.Emit(Mono.Cecil.Cil.OpCodes.Mul);
+//    }
+//}
+
 [HarmonyPatch(typeof(LevelAssembler), "GetLevel")]
 public static class Patch_LevelAssembler_GetLevel
 {
@@ -56,7 +91,7 @@ public static class Patch_LevelAssembler_GetLevel
         matcher.MatchForward(false, opcodes_to_match);
         matcher.Advance(opcodes_to_match.Length);
         matcher.InsertAndAdvance(
-            CodeInstruction.Call(() => 1 )
+            CodeInstruction.Call(() => 1)
         );
         matcher.MatchForward(false, opcodes_to_match);
         matcher.Advance(opcodes_to_match.Length);
